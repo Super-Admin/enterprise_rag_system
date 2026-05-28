@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { listKnowledgeBases, sendMessage } from "@/lib/api";
+import LoginForm from "@/components/LoginForm";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import KnowledgeBaseSelector from "@/components/KnowledgeBaseSelector";
+import DocumentManager from "@/components/DocumentManager";
 
 interface Source {
   filename: string;
@@ -25,6 +27,7 @@ interface KB {
 }
 
 export default function Home() {
+  const [token, setToken] = useState<string | null>(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KB[]>([]);
   const [selectedKB, setSelectedKB] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,17 +36,9 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "test@example.com", password: "test123456" }),
-      })
-        .then((res) => res.json())
-        .then((data) => localStorage.setItem("token", data.access_token))
-        .then(() => loadKBs());
-    } else {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) {
+      setToken(savedToken);
       loadKBs();
     }
   }, []);
@@ -60,6 +55,20 @@ export default function Home() {
     } catch (e) {
       console.error("Failed to load KBs:", e);
     }
+  }
+
+  function handleLogin(newToken: string) {
+    setToken(newToken);
+    loadKBs();
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setToken(null);
+    setKnowledgeBases([]);
+    setSelectedKB(null);
+    setMessages([]);
+    setChatId(null);
   }
 
   async function handleSend(message: string) {
@@ -85,17 +94,39 @@ export default function Home() {
     }
   }
 
+  // 未登录显示登录页面
+  if (!token) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
+
   return (
     <div className="flex h-screen">
-      <div className="w-64 bg-gray-50 border-r flex flex-col">
-        <div className="p-4 border-b">
+      <div className="w-80 bg-gray-50 border-r flex flex-col">
+        <div className="p-4 border-b flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-800">企业知识库 RAG</h1>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            退出
+          </button>
         </div>
+
         <KnowledgeBaseSelector
           knowledgeBases={knowledgeBases}
           selectedId={selectedKB}
           onSelect={setSelectedKB}
         />
+
+        {selectedKB && (
+          <DocumentManager
+            kbId={selectedKB}
+            onUploadSuccess={() => {
+              // 上传成功后可以刷新某些状态
+            }}
+          />
+        )}
+
         <div className="flex-1 p-4">
           <p className="text-sm text-gray-500">
             {selectedKB ? "已选择知识库" : "请先选择知识库"}

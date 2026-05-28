@@ -46,6 +46,37 @@ export async function createKnowledgeBase(name: string, description: string) {
   });
 }
 
+// Documents
+export async function uploadDocument(kbId: number, file: File) {
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("kb_id", kbId.toString());
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE}/api/document/upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    throw new Error(`Upload error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function listDocuments(kbId: number) {
+  return request(`/api/document/list?kb_id=${kbId}`);
+}
+
+export async function deleteDocument(docId: number) {
+  return request(`/api/document/${docId}`, {
+    method: "DELETE",
+  });
+}
+
 // Chat
 export async function sendMessage(kbId: number, message: string, chatId?: number) {
   return request("/api/chat", {
