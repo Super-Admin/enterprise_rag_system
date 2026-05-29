@@ -17,14 +17,17 @@ export default function LoginForm({ onLogin }: { onLogin: (token: string) => voi
     setLoading(true);
 
     try {
-      let data;
       if (isRegister) {
-        data = await register(username, email, password);
+        // 注册成功后自动登录
+        await register(username, email, password);
+        const loginData = await login(email, password);
+        localStorage.setItem("token", loginData.access_token);
+        onLogin(loginData.access_token);
       } else {
-        data = await login(email, password);
+        const data = await login(email, password);
+        localStorage.setItem("token", data.access_token);
+        onLogin(data.access_token);
       }
-      localStorage.setItem("token", data.access_token);
-      onLogin(data.access_token);
     } catch (e: any) {
       setError(isRegister ? "注册失败，请检查输入" : "登录失败，请检查邮箱和密码");
     } finally {
