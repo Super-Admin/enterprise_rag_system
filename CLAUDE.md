@@ -49,6 +49,16 @@ npm run dev
 - 后端：http://localhost:8000/health
 - API v1：http://localhost:8000/api/v1/health
 
+### Git 推送
+```bash
+# 使用 SSH 推送到 GitHub
+git push -u origin main
+
+# 远程仓库地址
+# SSH: git@github.com:Super-Admin/enterprise_rag_system.git
+# HTTPS: https://github.com/Super-Admin/enterprise_rag_system.git
+```
+
 ## 架构设计
 
 ### 后端结构（`backend/app/`）
